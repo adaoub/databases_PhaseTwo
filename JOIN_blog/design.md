@@ -147,16 +147,16 @@ Using comments, define the method signatures (arguments and return value) and wh
 # Repository class
 # (in lib/useraccounts_repository.rb)
 
-class CommentsRepository
+class PostRepository
 
-def find_with_Posts (id)
+def find_with_comments (id)
  # Executes the SQL query:
-  SELECT posts.id AS post_id, posts.title, posts.content, comments.id AS comment_id, comments.content AS comment
-  FROM comments
-  JOIN posts ON comments.post_id = posts.id
-  WHERE post_id = 2;
+  # SELECT posts.id AS post_id, posts.title, posts.content, comments.id AS comment_id, comments.content AS comment_content
+  # FROM comments
+  # JOIN posts ON comments.post_id = posts.id
+  # WHERE post_id = 2;
 
-   #return a cohort object with array of Post objects     
+   #return a post object with array of comment objects     
 end
 
 
@@ -175,18 +175,18 @@ These examples will later be encoded as RSpec tests.
 
 
 # 1
-# Get a cohort and it's asscciated Posts
+# Get a post and it's asscciated comments
 
 
-repo = CohortRepository.new
+repo = PostRepository.new
 
-cohort = repo.find_with_Posts(1)
+post = repo.find_with_Posts(2)
 
-cohort.id # =>  "1"
-cohort.name # =>  "June 2000"
-cohort.starting_date # =>  '2000-04-20'
-cohort.Posts.length # => 2
-cohort.Posts.first.name # => "Bob"
+post.id # =>  "1"
+post.title # =>  "weather"
+post.content # =>  'very warm'
+post.comments.length # => 2
+post.comments.first.comment_content # => "I think its raining next week"
 
 
 
