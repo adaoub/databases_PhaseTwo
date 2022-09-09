@@ -13,19 +13,18 @@ Otherwise, [follow this recipe to design and create the SQL schema for your tabl
 ```
 # EXAMPLE
 
-Table: students
- id | name | cohort_id 
-----+------+-----------
-  1 | Bob  |         1
-  2 | John |         2
-  3 | Lucy |         1
-(3 rows)
+Table: posts
+ id |  title  |   content   
+----+---------+-------------
+  1 | Coding  | very hard
+  2 | weather | very warm
+  3 | time    | runni
 
-Table: cohorts
- id |      name      | starting_date 
-----+----------------+---------------
-  1 | June 2000      | 2000-04-20
-  2 | September 2022 | 2022-09-15
+Table: comments
+ id |            content            | post_id 
+----+-------------------------------+---------
+  1 | Yeah I agree!                 |       1
+  2 | I think its raining next week |       2
 (2 rows)
 ```
 
@@ -45,29 +44,22 @@ If seed data is provided (or you already created it), you can skip this step.
 -- so we can start with a fresh state.
 -- (RESTART IDENTITY resets the primary key)
 
-TRUNCATE TABLE cohorts, students RESTART IDENTITY; -- replace with your own table name.
+TRUNCATE TABLE posts, comments RESTART IDENTITY; -- replace with your own table name.
 
 -- Below this line there should only be `INSERT` statements.
 -- Replace these statements with your own seed data.
 
 
-INSERT INTO "public"."cohorts" ("name", "starting_date") VALUES
-('September 2022', '2022/09/15');
+INSERT INTO posts (title, content)VALUES('Coding', 'very hard');
 
 
-INSERT INTO "public"."cohorts" ("name", "starting_date") VALUES
-('June 2000', '2000/04/20');
+INSERT INTO posts (title, content)VALUES('weather', 'very warm');
+
+INSERT INTO posts (title, content)VALUES('time', 'running out');
 
 
-INSERT INTO "public"."students" ("name", "cohort_id") VALUES
-('Bob', 1);
-
-INSERT INTO "public"."students" ("name", "cohort_id") VALUES
-('John', 2);
-
-INSERT INTO "public"."students" ("name", "cohort_id") VALUES
-('Lucy', 1);
-
+INSERT INTO comments (content, post_id) VALUES ('Yeah I agree!', 1);
+INSERT INTO comments (content, post_id)VALUES ('I think its raining next week', 2);
 
 ```
 
@@ -83,22 +75,22 @@ Usually, the Model class name will be the capitalised table name (single instead
 
 ```ruby
 # EXAMPLE
-# Table name: students
+# Table name: Posts
 
 # Model class
-# (in lib/students.rb)
-class Student
+# (in lib/Posts.rb)
+class Post
 end
 
 # Repository class
-# (in lib/students_repository.rb)
-class StudentRepository
+# (in lib/Posts_repository.rb)
+class PostRepository
 end
 
-class Cohort
+class Comments
 end
 
-class CohortRepository
+class CommentsRepository
 end
 ```
 
@@ -108,32 +100,32 @@ Define the attributes of your Model class. You can usually map the table columns
 
 ```ruby
 # EXAMPLE
-# Table name: students
+# Table name: Posts
 
 # Model class
-# (in lib/students.rb)
+# (in lib/Posts.rb)
 
-class Student
+class Post
 
   # Replace the attributes by your own columns.
-  attr_accessor :name, :cohort_id
+  attr_accessor :id, :title, :content
 end
 
 # The keyword attr_accessor is a special Ruby feature
 # which allows us to set and get attributes on an object,
 # here's an example:
 #
-# students = students.new
-# students.name = 'Bossanova'
-# students.name
+# Posts = Posts.new
+# Posts.name = 'Bossanova'
+# Posts.name
 
 #2
 # Table name: posts
 
-class Cohort
+class Comments
 
   # Replace the attributes by your own columns.
-  attr_accessor :name, :starting_date
+  attr_accessor :id, :content, :post_id
 end
 
 ```
@@ -150,21 +142,21 @@ Using comments, define the method signatures (arguments and return value) and wh
 ```ruby
 # EXAMPLE
 #1
-# Table name: students
+# Table name: Posts
 
 # Repository class
 # (in lib/useraccounts_repository.rb)
 
-class CohortRepository
+class CommentsRepository
 
-def find_with_students (id)
+def find_with_Posts (id)
  # Executes the SQL query:
-  # SELECT students.id AS student_id, students.name, cohorts.id AS cohort_id, cohorts.name, cohorts.starting_date 
-  # FROM students
-  # JOIN cohorts ON students.cohort_id = cohorts.id
-  # WHERE cohort_id = 1;
+  SELECT posts.id AS post_id, posts.title, posts.content, comments.id AS comment_id, comments.content AS comment
+  FROM comments
+  JOIN posts ON comments.post_id = posts.id
+  WHERE post_id = 2;
 
-   #return a cohort object with array of student objects     
+   #return a cohort object with array of Post objects     
 end
 
 
@@ -183,18 +175,18 @@ These examples will later be encoded as RSpec tests.
 
 
 # 1
-# Get a cohort and it's asscciated students
+# Get a cohort and it's asscciated Posts
 
 
 repo = CohortRepository.new
 
-cohort = repo.find_with_students(1)
+cohort = repo.find_with_Posts(1)
 
 cohort.id # =>  "1"
 cohort.name # =>  "June 2000"
 cohort.starting_date # =>  '2000-04-20'
-cohort.students.length # => 2
-cohort.students.first.name # => "Bob"
+cohort.Posts.length # => 2
+cohort.Posts.first.name # => "Bob"
 
 
 
@@ -211,11 +203,11 @@ This is so you get a fresh table contents every time you run the test suite.
 ```ruby
 # EXAMPLE
 
-# file: spec/students_repository_spec.rb
+# file: spec/Posts_repository_spec.rb
 
 def reset_cohorts_table
   seed_sql = File.read('spec/seeds.sql')
-  connection = PG.connect({ host: '127.0.0.1', dbname: 'student_directory_2' })
+  connection = PG.connect({ host: '127.0.0.1', dbname: 'Post_directory_2' })
   connection.exec(seed_sql)
 end
 
